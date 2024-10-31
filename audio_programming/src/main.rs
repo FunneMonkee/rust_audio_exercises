@@ -3,8 +3,8 @@ mod midi_frequency;
 mod sound_files;
 mod file_types;
 
-use tuning::tuning::draw_sin;
+use sound_files::sound_files::write_wav;
 
 fn main() {
-    draw_sin();
+    _ = write_wav();
 }
