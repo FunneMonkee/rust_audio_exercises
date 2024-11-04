@@ -1,22 +1,13 @@
-use std::{f64::consts::PI, fs::File, io::{Result, Seek, SeekFrom, Write}};
-use crate::file_types::file_types::{SoundFileChannelFormat, SoundFileFormat, SoundFileProps, SoundFileSampleType};
+use std::{f64::consts::PI, fs::File, io::{Result, Seek, SeekFrom, Write}, str};
+use crate::file_types::file_types::SoundFileProps;
 
-pub fn write_wav() -> Result<()> {
-    let props = SoundFileProps {
-        sample_rate: 44100,
-        sample_type: SoundFileSampleType::PsfSamp16,
-        format: SoundFileFormat::PsfStdWave,
-        channel_format: SoundFileChannelFormat::McMono
-    };
-
+pub fn write_wav(props: SoundFileProps, frequencies: Vec<f64>, duration_per_note: u8, file_name: &str) -> Result<()> {
     let num_channels: u16 = props.channel_format.get_number_of_channels();
     let bits_per_sample: u16 = props.sample_type as u16;
     let byte_rate: u32 = (props.sample_rate * num_channels as u32 * bits_per_sample as u32) / 8; 
     let block_align: u16 = (num_channels * bits_per_sample) / 8;
-    let frequency: f64 = 220.0;
-    let duration: u8 = 2;
 
-    let mut file = File::create("wave.wav")?;
+    let mut file = File::create(file_name)?;
 
     // ChunkId
     // Contains the letters "RIFF" in ASCII form (0x52494646 big-endian form).
@@ -68,21 +59,23 @@ pub fn write_wav() -> Result<()> {
 
     //generate sin wave
     let amplitude: f64 = 0.5;
-    let offset: f64 = 2.0 * PI * frequency/(props.sample_rate as f64);
     let mut angle: f64 = 0.0;
-    let samples_required: u64 = props.sample_rate as u64 * duration as u64;
+    let samples_required: u64 = props.sample_rate as u64 * duration_per_note as u64;
     
     let mut sample: f64;
     let mut sample_to_write: i16;
     let max_amplitude: f64 = 2.0f64.powi((bits_per_sample as i32 - 1).into()) - 1.0;
 
-    for _ in 1..samples_required
-    {
-        sample = amplitude * angle.sin();
-        angle += offset;
-        sample_to_write = (sample * max_amplitude) as i16;
-        println!("{}",&sample_to_write);
-        file.write_all(&sample_to_write.to_le_bytes())?;
+    for frequency in frequencies {
+        let offset: f64 = 2.0 * PI * frequency/(props.sample_rate as f64);
+        for _ in 1..samples_required
+        {
+            sample = amplitude * angle.sin();
+            angle += offset;
+            sample_to_write = (sample * max_amplitude) as i16;
+            println!("{}",&sample_to_write);
+            file.write_all(&sample_to_write.to_le_bytes())?;
+        }
     }
     let mut data_end_position = file.stream_position()?;
     
