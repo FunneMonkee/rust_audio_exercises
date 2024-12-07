@@ -46,9 +46,15 @@ pub enum SoundFileCreationFtype {
     PsfCreateWronly //not implemented, to create private file
 }
 
+pub struct ChannelPeakData {
+    pub value: f32,
+    pub position: u32
+}
+
 pub struct SoundFileProps {
     pub sample_rate: u32,
     pub sample_type: SoundFileSampleType,
     pub format: SoundFileFormat,
-    pub channel_format: SoundFileChannelFormat
+    pub channel_format: SoundFileChannelFormat,
+    pub peak_data: ChannelPeakData
 }
